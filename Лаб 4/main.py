@@ -5,8 +5,8 @@ from functools import partial
 
 m = 3
 N = 8
-x1min, x2min, x3min = -25, -15, -5
-x1max, x2max, x3max = -5, 35, 60
+x1min, x2min, x3min = 20, 5, 20
+x1max, x2max, x3max = 70, 40, 45
 
 X_max = [x1max, x2max, x3max]
 X_min = [x1min, x2min, x3min]
