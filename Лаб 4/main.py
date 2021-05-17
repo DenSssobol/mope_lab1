@@ -2,22 +2,25 @@ import random, math
 import numpy as np
 from scipy.stats import f, t
 from functools import partial
+from time import time
+
+## Додаткове завдання виконане на рядку 193, 204, 241, 268
 
 m = 3
 N = 8
-x1min, x2min, x3min = 20, 5, 20
-x1max, x2max, x3max = 70, 40, 45
 
-X_max = [x1max, x2max, x3max]
-X_min = [x1min, x2min, x3min]
+X_max = [20, 5, 20]
+X_min = [70, 40, 45]
 
-x_av_min = (x1min + x2min + x3min) / 3
-x_av_max = (x1max + x2max + x3max) / 3
+x_av_min = sum(X_max) / 3
+x_av_max = sum(X_min)/ 3
 Y_max = int(round(200 + x_av_max, 0))
 Y_min = int(round(200 + x_av_min, 0))
 X0 = 1
 
-X_matr = [[-1, -1, -1], [-1, -1, 1], [-1, 1, -1], [-1, 1, 1], [1, -1, -1], [1, -1, 1], [1, 1, -1], [1, 1, 1]]
+X_matr = [[-1, -1, -1],
+          [-1, -1, 1],
+          [-1, 1, -1], [-1, 1, 1], [1, -1, -1], [1, -1, 1], [1, 1, -1], [1, 1, 1]]
 
 x_for_beta = [[1, -1, -1, -1], [1, -1, -1, 1], [1, -1, 1, -1], [1, -1, 1, 1],
               [1, 1, -1, -1], [1, 1, -1, 1], [1, 1, 1, -1], [1, 1, 1, 1]]
@@ -184,8 +187,11 @@ while not flag:
         fisher_value = f.ppf(q=1 - q1, dfn=f2, dfd=(f1 - 1) * f2)
         return fisher_value / (fisher_value + f1 - 1)
 
-
+    start_kohren = time()
     Gt = kohren()
+
+############################ Пошук часу виконання перевірки Кохрена ###########################################
+    time_kohren = time() - start_kohren
 
     if Gp < Gt:
         print('Дисперсії однорідні')
@@ -194,6 +200,10 @@ while not flag:
     else:
         print('Дисперсії неоднорідні')
         m += 1
+
+########################### Вивід часу виконання перевірки Кохрена ###########################################
+    print('Час перевірки Кохрена - ', time_kohren*1000, 'мс')
+
     S_average = sum(S_kv) / N
 
     S2_beta_s = S_average / (N * m)
@@ -221,11 +231,16 @@ while not flag:
     student = partial(t.ppf, q=1 - 0.025)
     criterion_of_St = student(df=f3)
 
+    start_student = time()
     result_2 = [criterion_of_Student(B_nat[0], criterion_of_St, ts[0]) +
                 criterion_of_Student(B_nat[1], criterion_of_St, ts[1]) * X_matr_natur[i][0] +
                 criterion_of_Student(B_nat[2], criterion_of_St, ts[2]) * X_matr_natur[i][1] +
                 criterion_of_Student(B_nat[3], criterion_of_St, ts[3]) * X_matr_natur[i][2] for i in range(N)]
 
+
+######################### Пошук часу виконання перевірки критерія Стюдента ###########################################
+
+    time_student = time() - start_student
     znach_koef = []
     for i in ts:
         if i > criterion_of_St:
@@ -245,8 +260,18 @@ while not flag:
     Ft = fisher(dfn=f4, dfd=f3)
 
     print("Значення після критерія Стюдента:")
-    print("Y1 = ",result_2[0],";   Y2 = ",result_2[0],";   Y3 = ",result_2[0],";   Y4 =",result_2[3])
-    print("Y1a = ",Y_average[0],";   Y2a = ",Y_average[1],";   Y3a = ",Y_average[2],";   Y4a = ",Y_average[3])
+    print("Y1 = {0:.3f};   Y2 = {1:.3f};   Y3 = {2:.3f};   Y4 = {3:.3f}.".format(result_2[0],
+                                                                                 result_2[1],
+                                                                                 result_2[2],
+                                                                                 result_2[3]))
+
+###################### Вивід часу виконання перевірки критерія Стюдента ###########################################
+    print('Час перевірки критерія Стюдента - ', time_student*1000, 'мс')
+
+    print("Y1a = {0:.3f};   Y2a = {1:.3f};   Y3a = {2:.3f};   Y4a = {3:.3f}.".format(Y_average[0],
+                                                                                     Y_average[1],
+                                                                                     Y_average[2],
+                                                                                     Y_average[3]))
 
     if Fp > Ft:
         print('Fp = {} > Ft = {}'.format(round(Fp, 3), Ft))
