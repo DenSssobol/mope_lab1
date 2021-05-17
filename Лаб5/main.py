@@ -3,6 +3,9 @@ from pyDOE2 import *
 import sklearn.linear_model as lm
 from scipy.stats import f, t
 from functools import partial
+from itertools import compress
+
+###########Додаткове завдання на стр 53##########################################
 
 x_range = ((-5, 5), (-1, 6), (-10, 1))
 
@@ -46,6 +49,14 @@ def check(X, Y, B, n, m):
     final_k = [B[i] for i in range(len(ts)) if ts[i] in res]
     print('\nКоефіцієнти {} статистично незначущі, тому ми виключаємо їх з рівняння.'.format(
         [round(i, 3) for i in B if i not in final_k]))
+
+#ДОДАТКОВЕ ЗАВДАННЯ
+    rres = [t for t in ts if t < t_student]
+    final_kk = [B[i] for i in range(len(ts)) if ts[i] in rres]
+    x_i_names = list(compress(["", "x1", "x2", "x3", "x12", "x13", "x23", "x123", "x1^2", "x2^2", "x3^2"], rres))
+    equation = " ".join(["".join(i) for i in zip(list(map(lambda x: "{:+.3f}".format(x), final_kk)),x_i_names)])
+    print("Рівняння регресії тільки із незначимих членів: y = " + equation)
+
 
     y_new = []
     for j in range(n):
@@ -134,7 +145,6 @@ def plan_matrix5(n, m):
                 x[i][j] = x_range[j - 1][0]
             else:
                 x[i][j] = x_range[j - 1][1]
-
     for i in range(8, len(x)):
         for j in range(1, 3):
             x[i][j] = (x_range[j - 1][0] + x_range[j - 1][1]) / 2
