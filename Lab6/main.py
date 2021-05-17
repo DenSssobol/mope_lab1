@@ -5,6 +5,7 @@ from scipy.stats import f, t
 import numpy
 from itertools import compress
 from functools import reduce
+from time import time
 
 xmin = [-20, -35, -20]
 xmax = [30, 15, 5]
@@ -96,12 +97,18 @@ def m_ij(*arrays):
 
 
 def find_coefficients(factors, y_vals):
+    start_time = time()
     x_i = set_factors_table(factors)
     coeffs = [[m_ij(x_i(column), x_i(row)) for column in range(11)] for row in range(11)]
     y_numpy = list(map(lambda row: numpy.average(row), y_vals))
     free_values = [m_ij(y_numpy, x_i(i)) for i in range(11)]
     beta_coefficients = numpy.linalg.solve(coeffs, free_values)
+    global time_find
+
+###########################Рахуємо час пошуку коефіцієнтів###################################
+    time_find = time() - start_time
     return list(beta_coefficients)
+
 
 
 def cochran_criteria(m, N, y_table):
@@ -155,7 +162,7 @@ def student_criteria(m, N, y_table, beta_coefficients):
     return importance
 
 
-def fisher_criteria(m, N, d, x_table, y_table, b_coefficients, importance):
+def fisher_criteria(m, N, d, x_table, y_table, b_coefficients, coef):
     def get_fisher_value(f3, f4, q):
         return Decimal(abs(f.isf(q, f4, f3))).quantize(Decimal('.0001')).__float__()
 
@@ -175,7 +182,8 @@ def fisher_criteria(m, N, d, x_table, y_table, b_coefficients, importance):
     print("Теоретичні значення Y для різних комбінацій факторів:")
     print("\n".join(["{arr[0]}: y = {arr[1]}".format(arr=el) for el in theoretical_values_to_print]))
     print("Fp = {}, Ft = {}".format(f_p, f_t))
-    print("Fp < Ft => модель адекватна" if f_p < f_t else "Fp > Ft => модель неадекватна")
+    if coef == 1:
+        print("Fp < Ft => модель адекватна" if f_p < f_t else "Fp > Ft => модель неадекватна")
     return True if f_p < f_t else False
 
 
@@ -188,8 +196,15 @@ while not cochran_criteria(m, N, y_arr):
     y_arr = generate_y(m, natural_plan)
 
 print_matrix(m, N, natural_plan, y_arr, " для натуралізованих факторів:")
+
 coefficients = find_coefficients(natural_plan, y_arr)
 print_equation(coefficients)
+coef = 0
+
+if time_find > 0.1:
+    coef = 1
+    print("Модель неадекватна")
+print("t= ", time_find)
 importance = student_criteria(m, N, y_arr, coefficients)
 d = len(list(filter(None, importance)))
-fisher_criteria(m, N, d, natural_plan, y_arr, coefficients, importance)
+fisher_criteria(m, N, d, natural_plan, y_arr, coefficients, coef)
